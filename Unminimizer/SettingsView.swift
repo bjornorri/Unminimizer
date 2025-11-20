@@ -1,9 +1,11 @@
 import SwiftUI
 import ServiceManagement
+import Combine
 
 struct SettingsView: View {
     @EnvironmentObject var settings: AppSettings
     @State private var accessibilityPermissionGranted = AXIsProcessTrusted()
+    @State private var timerCancellable: AnyCancellable?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -94,14 +96,39 @@ struct SettingsView: View {
             // Check permission status when view appears
             accessibilityPermissionGranted = AXIsProcessTrusted()
         }
+        .onDisappear {
+            // Stop timer when view disappears
+            stopTimer()
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
-            // Check permission status when window becomes active
+            // Window became frontmost - check permission and stop polling
+            stopTimer()
             accessibilityPermissionGranted = AXIsProcessTrusted()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+            // Window lost focus - start polling (user might be in System Settings)
+            startTimer()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // Check permission status when app becomes active (switching from System Settings)
             accessibilityPermissionGranted = AXIsProcessTrusted()
         }
+    }
+
+    private func startTimer() {
+        // Only start if not already running
+        guard timerCancellable == nil else { return }
+
+        timerCancellable = Timer.publish(every: 0.5, on: .main, in: .common)
+            .autoconnect()
+            .sink { _ in
+                accessibilityPermissionGranted = AXIsProcessTrusted()
+            }
+    }
+
+    private func stopTimer() {
+        timerCancellable?.cancel()
+        timerCancellable = nil
     }
 }
 
