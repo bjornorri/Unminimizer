@@ -90,15 +90,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.styleMask = [.titled, .closable]
             window.setContentSize(NSSize(width: 500, height: 400))
             window.delegate = self
+            window.center()
             settingsWindow = window
         }
 
         // Become a regular app (appear in Dock and app switcher)
         NSApp.setActivationPolicy(.regular)
 
-        settingsWindow?.center()
-        settingsWindow?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async { [weak self] in
+            NSApp.activate()
+            DispatchQueue.main.async {
+                self?.settingsWindow?.makeKeyAndOrderFront(nil)
+            }
+        }
     }
 
     @objc private func quitApp() {
