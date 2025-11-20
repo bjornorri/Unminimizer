@@ -93,6 +93,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             settingsWindow = window
         }
 
+        // Become a regular app (appear in Dock and app switcher)
+        NSApp.setActivationPolicy(.regular)
+
         settingsWindow?.center()
         settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -241,6 +244,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
+        // Return to accessory app (menu bar only, no Dock icon)
+        NSApp.setActivationPolicy(.accessory)
         settingsWindow = nil
     }
 }
