@@ -94,6 +94,14 @@ struct SettingsView: View {
             // Check permission status when view appears
             accessibilityPermissionGranted = AXIsProcessTrusted()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+            // Check permission status when window becomes active
+            accessibilityPermissionGranted = AXIsProcessTrusted()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            // Check permission status when app becomes active (switching from System Settings)
+            accessibilityPermissionGranted = AXIsProcessTrusted()
+        }
     }
 }
 
