@@ -25,8 +25,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Register keyboard shortcut
         registerHotKey()
 
+        // Listen for shortcut changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleShortcutChange),
+            name: .shortcutDidChange,
+            object: nil
+        )
+
         // Setup launch at login
         updateLaunchAtLogin()
+    }
+
+    @objc private func handleShortcutChange() {
+        updateHotKey()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

@@ -1,6 +1,10 @@
 import SwiftUI
 import Carbon
 
+extension Notification.Name {
+    static let shortcutDidChange = Notification.Name("shortcutDidChange")
+}
+
 struct KeyboardShortcutRecorder: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let view = ShortcutRecorderView()
@@ -112,10 +116,8 @@ class ShortcutRecorderView: NSView {
                 self.settings.keyboardShortcutKeyCode = UInt32(keyCode)
                 self.settings.keyboardShortcutModifiers = carbonModifiers
 
-                // Update the hot key registration
-                if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                    appDelegate.updateHotKey()
-                }
+                // Notify AppDelegate to update the hotkey
+                NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
             }
 
             self.stopRecording()
