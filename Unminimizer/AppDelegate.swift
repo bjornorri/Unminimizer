@@ -241,9 +241,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("🚀 performUnminimize called")
 
         let settings = AppSettings.shared
-        let activeAppOnly = settings.unminimizeActiveAppOnly
+        let activeAppOnly = settings.unminimizeStrategy == .activeApp
 
-        print("⚙️ Settings: activeAppOnly=\(activeAppOnly)")
+        print("⚙️ Settings: strategy=\(settings.unminimizeStrategy), activeAppOnly=\(activeAppOnly)")
 
         guard let window = windowTracker.getMostRecentMinimizedWindow(fromActiveAppOnly: activeAppOnly) else {
             // No minimized windows available

@@ -3,8 +3,15 @@ import SwiftUI
 import Carbon
 import Combine
 
+enum UnminimizeStrategy: String, CaseIterable, Identifiable {
+    case activeApp = "Active app only"
+    case allApps = "All apps"
+
+    var id: String { rawValue }
+}
+
 class AppSettings: ObservableObject {
-    @AppStorage("unminimizeCurrentAppOnly") var unminimizeActiveAppOnly = false
+    @AppStorage("unminimizeStrategy") var unminimizeStrategy: UnminimizeStrategy = .activeApp
     @AppStorage("launchAtLogin") var launchAtLogin = true
 
     @Published var keyboardShortcutKeyCode: UInt32 {

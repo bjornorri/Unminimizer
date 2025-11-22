@@ -8,13 +8,6 @@ struct SettingsView: View {
     @State private var timerCancellable: AnyCancellable?
     @State private var escapeMonitor: Any?
 
-    enum UnminimizeScope: String, CaseIterable, Identifiable {
-        case activeApp = "Active app only"
-        case allApps = "All apps"
-
-        var id: String { rawValue }
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             // Accessibility Permission Section
@@ -87,12 +80,9 @@ struct SettingsView: View {
                         HStack(alignment: .top) {
                             Text("Unminimize windows from")
                             Spacer()
-                            Picker("", selection: Binding(
-                                get: { settings.unminimizeActiveAppOnly ? UnminimizeScope.activeApp : UnminimizeScope.allApps },
-                                set: { settings.unminimizeActiveAppOnly = ($0 == .activeApp) }
-                            )) {
-                                ForEach(UnminimizeScope.allCases) { scope in
-                                    Text(scope.rawValue).tag(scope)
+                            Picker("", selection: $settings.unminimizeStrategy) {
+                                ForEach(UnminimizeStrategy.allCases) { strategy in
+                                    Text(strategy.rawValue).tag(strategy)
                                 }
                             }
                             .labelsHidden()
@@ -100,7 +90,7 @@ struct SettingsView: View {
                         }
 
                         HStack {
-                            Text(settings.unminimizeActiveAppOnly
+                            Text(settings.unminimizeStrategy == .activeApp
                                  ? "Only unminimize windows from the active application"
                                  : "Unminimize windows from any application")
                                 .font(.caption)
