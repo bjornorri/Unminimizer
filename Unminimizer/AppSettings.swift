@@ -4,7 +4,7 @@ import Carbon
 import Combine
 
 class AppSettings: ObservableObject {
-    @AppStorage("unminimizeCurrentAppOnly") var unminimizeCurrentAppOnly = false
+    @AppStorage("unminimizeCurrentAppOnly") var unminimizeActiveAppOnly = false
     @AppStorage("launchAtLogin") var launchAtLogin = true
 
     @Published var keyboardShortcutKeyCode: UInt32 {

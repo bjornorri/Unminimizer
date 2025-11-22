@@ -277,10 +277,10 @@ class WindowTracker: ObservableObject {
         observeApplication(app)
     }
 
-    func getMostRecentMinimizedWindow(fromCurrentAppOnly: Bool = false) -> MinimizedWindow? {
-        print("🔍 Getting most recent window. Current app only: \(fromCurrentAppOnly). Total minimized: \(minimizedWindows.count)")
+    func getMostRecentMinimizedWindow(fromActiveAppOnly: Bool = false) -> MinimizedWindow? {
+        print("🔍 Getting most recent window. Active app only: \(fromActiveAppOnly). Total minimized: \(minimizedWindows.count)")
 
-        if fromCurrentAppOnly {
+        if fromActiveAppOnly {
             guard let frontmostApp = NSWorkspace.shared.frontmostApplication,
                   let bundleID = frontmostApp.bundleIdentifier else {
                 print("⚠️ No frontmost app found")
@@ -291,7 +291,7 @@ class WindowTracker: ObservableObject {
 
             // Find most recent window from frontmost app
             let filtered = minimizedWindows.filter { $0.appBundleIdentifier == bundleID }
-            print("📋 Found \(filtered.count) minimized windows for current app")
+            print("📋 Found \(filtered.count) minimized windows for active app")
             return filtered.max(by: { $0.timestamp < $1.timestamp })
         } else {
             // Return most recent window globally

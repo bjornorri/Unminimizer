@@ -120,7 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let window = NSWindow(contentViewController: hostingController)
             window.title = "Unminimizer Settings"
             window.styleMask = [.titled, .closable]
-            window.setContentSize(NSSize(width: 500, height: 400))
+            window.setContentSize(NSSize(width: 550, height: 420))
             window.delegate = self
             window.center()
             settingsWindow = window
@@ -241,11 +241,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("🚀 performUnminimize called")
 
         let settings = AppSettings.shared
-        let currentAppOnly = settings.unminimizeCurrentAppOnly
+        let activeAppOnly = settings.unminimizeActiveAppOnly
 
-        print("⚙️ Settings: currentAppOnly=\(currentAppOnly)")
+        print("⚙️ Settings: activeAppOnly=\(activeAppOnly)")
 
-        guard let window = windowTracker.getMostRecentMinimizedWindow(fromCurrentAppOnly: currentAppOnly) else {
+        guard let window = windowTracker.getMostRecentMinimizedWindow(fromActiveAppOnly: activeAppOnly) else {
             // No minimized windows available
             print("⚠️ No window found, beeping")
             NSSound.beep()

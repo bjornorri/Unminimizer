@@ -20,6 +20,7 @@ struct KeyboardShortcutRecorder: NSViewRepresentable {
 
 class ShortcutRecorderView: NSView {
     private var isRecording = false
+    private var isFocused = false
     private var eventMonitor: Any?
 
     private let settings = AppSettings.shared
@@ -43,6 +44,41 @@ class ShortcutRecorderView: NSView {
 
     override var intrinsicContentSize: NSSize {
         return NSSize(width: 150, height: 28)
+    }
+
+    override var acceptsFirstResponder: Bool {
+        return true
+    }
+
+    @discardableResult
+    override func becomeFirstResponder() -> Bool {
+        isFocused = true
+        if !isRecording {
+            layer?.borderColor = NSColor.controlAccentColor.cgColor
+        }
+        needsDisplay = true
+        return super.becomeFirstResponder()
+    }
+
+    @discardableResult
+    override func resignFirstResponder() -> Bool {
+        isFocused = false
+        if isRecording {
+            stopRecording()
+        } else {
+            layer?.borderColor = NSColor.separatorColor.cgColor
+        }
+        needsDisplay = true
+        return super.resignFirstResponder()
+    }
+
+    override func keyDown(with event: NSEvent) {
+        // Start recording when Space or Enter is pressed while focused
+        if event.keyCode == 49 || event.keyCode == 36 { // Space or Return
+            startRecording()
+        } else {
+            super.keyDown(with: event)
+        }
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -75,10 +111,12 @@ class ShortcutRecorderView: NSView {
         text.draw(in: textRect, withAttributes: attributes)
     }
 
-    override func mouseDown(with event: NSEvent) {
+    override func mouseUp(with event: NSEvent) {
+        // Make sure we're the first responder and start recording
+        window?.makeFirstResponder(self)
         startRecording()
     }
-
+    
     private func startRecording() {
         isRecording = true
         needsDisplay = true
@@ -132,7 +170,13 @@ class ShortcutRecorderView: NSView {
 
     private func stopRecording() {
         isRecording = false
-        layer?.borderColor = NSColor.separatorColor.cgColor
+
+        // Restore border color based on focus state
+        if isFocused {
+            layer?.borderColor = NSColor.controlAccentColor.cgColor
+        } else {
+            layer?.borderColor = NSColor.separatorColor.cgColor
+        }
 
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
