@@ -66,6 +66,7 @@ struct SettingsView: View {
                             Text("Unminimize shortcut")
                             Spacer()
                             KeyboardShortcutRecorder()
+                                .frame(width: 150)
                         }
 
                         Text("Press the shortcut to unminimize the most recently minimized window")
