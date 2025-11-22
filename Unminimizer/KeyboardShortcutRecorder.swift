@@ -138,6 +138,7 @@ class ShortcutRecorderView: NSView {
             let keyCode = event.keyCode
             let modifiers = event.modifierFlags
 
+
             // Require at least one modifier
             var carbonModifiers: UInt32 = 0
 
@@ -161,9 +162,22 @@ class ShortcutRecorderView: NSView {
 
                 // Notify AppDelegate to update the hotkey
                 NotificationCenter.default.post(name: .shortcutDidChange, object: nil)
+
+                // Stop recording on valid shortcut
+                self.stopRecording()
+            } else {
+                // Handle Escape - cancel recording without saving
+                if keyCode == 53 { // Escape
+                    self.stopRecording()
+                }
+
+                // Handle Tab - cancel recording and let Tab move focus
+                if keyCode == 48 { // Tab
+                    self.stopRecording()
+                    return event // Let it propagate to move focus
+                }
             }
 
-            self.stopRecording()
             return nil
         }
     }
