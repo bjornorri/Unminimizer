@@ -32,6 +32,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: .shortcutDidChange,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleShortcutRecordingStarted),
+            name: .shortcutRecordingStarted,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleShortcutRecordingStopped),
+            name: .shortcutRecordingStopped,
+            object: nil
+        )
 
         // Setup launch at login
         updateLaunchAtLogin()
@@ -39,6 +51,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleShortcutChange() {
         updateHotKey()
+    }
+
+    @objc private func handleShortcutRecordingStarted() {
+        unregisterHotKey()
+    }
+
+    @objc private func handleShortcutRecordingStopped() {
+        registerHotKey()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

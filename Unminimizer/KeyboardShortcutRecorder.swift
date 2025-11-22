@@ -3,6 +3,8 @@ import Carbon
 
 extension Notification.Name {
     static let shortcutDidChange = Notification.Name("shortcutDidChange")
+    static let shortcutRecordingStarted = Notification.Name("shortcutRecordingStarted")
+    static let shortcutRecordingStopped = Notification.Name("shortcutRecordingStopped")
 }
 
 struct KeyboardShortcutRecorder: NSViewRepresentable {
@@ -83,6 +85,9 @@ class ShortcutRecorderView: NSView {
 
         layer?.borderColor = NSColor.controlAccentColor.cgColor
 
+        // Notify AppDelegate to temporarily unregister the hotkey
+        NotificationCenter.default.post(name: .shortcutRecordingStarted, object: nil)
+
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
             guard let self = self else { return event }
 
@@ -135,6 +140,9 @@ class ShortcutRecorderView: NSView {
         }
 
         needsDisplay = true
+
+        // Notify AppDelegate to re-register the hotkey
+        NotificationCenter.default.post(name: .shortcutRecordingStopped, object: nil)
     }
 
     private func formatShortcut() -> String {
