@@ -15,5 +15,11 @@ struct UnminimizerApp: App {
         Settings {
             EmptyView()
         }
+        .commands {
+            // Remove the Settings menu item from the app menu
+            CommandGroup(replacing: .appSettings) {
+                EmptyView()
+            }
+        }
     }
 }
