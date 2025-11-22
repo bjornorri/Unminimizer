@@ -11,6 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandler: EventHandlerRef?
+    private var cmdQMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create menu bar item
@@ -47,6 +48,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Setup launch at login
         updateLaunchAtLogin()
+
+        // Setup Cmd+Q handler
+        setupCmdQHandler()
     }
 
     @objc private func handleShortcutChange() {
@@ -64,6 +68,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         windowTracker.stopTracking()
         unregisterHotKey()
+        if let monitor = cmdQMonitor {
+            NSEvent.removeMonitor(monitor)
+            cmdQMonitor = nil
+        }
     }
 
     private func setupMenuBar() {
@@ -99,12 +107,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let quitItem = NSMenuItem(
             title: "Quit Unminimizer",
             action: #selector(quitApp),
-            keyEquivalent: "q"
+            keyEquivalent: ""
         )
         quitItem.target = self
         menu.addItem(quitItem)
 
         statusItem?.menu = menu
+    }
+
+    private func setupCmdQHandler() {
+        cmdQMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return event }
+
+            // Check if this is Cmd+Q
+            if event.modifierFlags.contains(.command) && event.keyCode == 12 { // 12 is 'q'
+                // Check if settings window is open and visible
+                if let settingsWindow = self.settingsWindow, settingsWindow.isVisible {
+                    // Close the settings window instead of quitting
+                    settingsWindow.close()
+                    return nil // Consume the event
+                }
+            }
+
+            return event // Let the event through
+        }
     }
 
     @objc private func unminimizeWindow() {
