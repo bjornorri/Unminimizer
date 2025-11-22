@@ -52,6 +52,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Setup Cmd+Q handler
         setupCmdQHandler()
+
+        #if DEBUG
+        // Open settings on launch for development
+        DispatchQueue.main.async { [weak self] in
+            self?.showSettings()
+        }
+        #endif
     }
 
     @objc private func handleShortcutChange() {
