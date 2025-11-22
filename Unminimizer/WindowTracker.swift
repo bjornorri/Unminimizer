@@ -196,6 +196,21 @@ class WindowTracker: ObservableObject {
 
             if miniResult == .success && deminiResult == .success {
                 observedWindows.insert(windowHash)
+
+                // Check if window is already minimized
+                var isMinimizedValue: AnyObject?
+                let isMinimizedResult = AXUIElementCopyAttributeValue(
+                    window,
+                    kAXMinimizedAttribute as CFString,
+                    &isMinimizedValue
+                )
+
+                if isMinimizedResult == .success,
+                   let isMinimized = isMinimizedValue as? Bool,
+                   isMinimized {
+                    // Add to minimized windows
+                    handleWindowMinimized(window, pid: app.processIdentifier)
+                }
             } else {
                 print("⚠️ Failed to observe window in \(app.localizedName ?? "unknown"): mini=\(miniResult.rawValue) demini=\(deminiResult.rawValue)")
             }
