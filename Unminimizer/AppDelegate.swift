@@ -8,6 +8,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var windowTracker = WindowTracker()
     var settingsWindow: NSWindow?
+    var unminimizeMenuItem: NSMenuItem?
 
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandler: EventHandlerRef?
@@ -55,6 +56,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleShortcutChange() {
         updateHotKey()
+        updateUnminimizeMenuItemShortcut()
     }
 
     @objc private func handleShortcutRecordingStarted() {
@@ -83,6 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let menu = NSMenu()
+        menu.delegate = self
 
         let unminimizeItem = NSMenuItem(
             title: "Unminimize Window",
@@ -91,6 +94,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         unminimizeItem.target = self
         menu.addItem(unminimizeItem)
+
+        // Store reference and update with current shortcut
+        self.unminimizeMenuItem = unminimizeItem
+        updateUnminimizeMenuItemShortcut()
 
         menu.addItem(NSMenuItem.separator())
 
@@ -302,6 +309,65 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print("Failed to update launch at login: \(error)")
         }
     }
+
+    private func updateUnminimizeMenuItemShortcut() {
+        guard let menuItem = unminimizeMenuItem else { return }
+
+        let settings = AppSettings.shared
+        let keyCode = settings.keyboardShortcutKeyCode
+        let modifiers = settings.keyboardShortcutModifiers
+
+        // Convert key code to character
+        if let keyEquivalent = keyCodeToString(keyCode) {
+            menuItem.keyEquivalent = keyEquivalent
+            menuItem.keyEquivalentModifierMask = carbonModifiersToNSEventModifierFlags(modifiers)
+        }
+    }
+
+    private func keyCodeToString(_ keyCode: UInt32) -> String? {
+        // Map common key codes to their string equivalents
+        // These are the most common keys used for shortcuts
+        let keyCodeMap: [UInt32: String] = [
+            0: "a", 1: "s", 2: "d", 3: "f", 4: "h", 5: "g", 6: "z", 7: "x",
+            8: "c", 9: "v", 11: "b", 12: "q", 13: "w", 14: "e", 15: "r",
+            16: "y", 17: "t", 31: "o", 32: "u", 34: "i", 35: "p",
+            37: "l", 38: "j", 40: "k", 45: "n", 46: "m",
+            // Function keys
+            122: String(UnicodeScalar(NSF1FunctionKey)!),
+            120: String(UnicodeScalar(NSF2FunctionKey)!),
+            99: String(UnicodeScalar(NSF3FunctionKey)!),
+            118: String(UnicodeScalar(NSF4FunctionKey)!),
+            96: String(UnicodeScalar(NSF5FunctionKey)!),
+            97: String(UnicodeScalar(NSF6FunctionKey)!),
+            98: String(UnicodeScalar(NSF7FunctionKey)!),
+            100: String(UnicodeScalar(NSF8FunctionKey)!),
+            101: String(UnicodeScalar(NSF9FunctionKey)!),
+            109: String(UnicodeScalar(NSF10FunctionKey)!),
+            103: String(UnicodeScalar(NSF11FunctionKey)!),
+            111: String(UnicodeScalar(NSF12FunctionKey)!)
+        ]
+
+        return keyCodeMap[keyCode]
+    }
+
+    private func carbonModifiersToNSEventModifierFlags(_ carbonModifiers: UInt32) -> NSEvent.ModifierFlags {
+        var flags: NSEvent.ModifierFlags = []
+
+        if carbonModifiers & UInt32(cmdKey) != 0 {
+            flags.insert(.command)
+        }
+        if carbonModifiers & UInt32(shiftKey) != 0 {
+            flags.insert(.shift)
+        }
+        if carbonModifiers & UInt32(optionKey) != 0 {
+            flags.insert(.option)
+        }
+        if carbonModifiers & UInt32(controlKey) != 0 {
+            flags.insert(.control)
+        }
+
+        return flags
+    }
 }
 
 extension AppDelegate: NSWindowDelegate {
@@ -309,6 +375,26 @@ extension AppDelegate: NSWindowDelegate {
         // Return to accessory app (menu bar only, no Dock icon)
         NSApp.setActivationPolicy(.accessory)
         settingsWindow = nil
+    }
+}
+
+extension AppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        // Force menu item validation
+        menu.update()
+    }
+}
+
+extension AppDelegate: NSMenuItemValidation {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem === unminimizeMenuItem {
+            let settings = AppSettings.shared
+            let activeAppOnly = settings.unminimizeStrategy == .activeApp
+            let hasWindow = windowTracker.getMostRecentMinimizedWindow(fromActiveAppOnly: activeAppOnly) != nil
+            print("🔄 Validating menu item - hasWindow: \(hasWindow)")
+            return hasWindow
+        }
+        return true
     }
 }
 
