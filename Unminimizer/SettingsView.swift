@@ -12,102 +12,114 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 20) {
             // Accessibility Permission Section
             GroupBox(label: Text("Permissions").font(.headline)) {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .center) {
-                        Image(systemName: accessibilityPermissionGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .foregroundColor(accessibilityPermissionGranted ? .green : .red)
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: accessibilityPermissionGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundColor(accessibilityPermissionGranted ? .green : .red)
 
-                        Text("Accessibility Access")
-                        Spacer()
-
-                        Button("Grant Permission") {
-                            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-                            NSWorkspace.shared.open(url)
+                            Text("Accessibility Access")
                         }
-                        .opacity(accessibilityPermissionGranted ? 0 : 1)
-                        .disabled(accessibilityPermissionGranted)
-                    }
-                    .frame(height: 20)
 
-                    Text("Required to monitor and restore minimized windows")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        Text("Required to track and restore minimized windows")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+
+                    Button("Grant Permission") {
+                        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+                        NSWorkspace.shared.open(url)
+                    }
+                    .opacity(accessibilityPermissionGranted ? 0 : 1)
+                    .disabled(accessibilityPermissionGranted)
                 }
-                .padding(10)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 12)
             }
 
             // Preferences Section
             GroupBox(label: Text("Preferences").font(.headline)) {
-                VStack(alignment: .leading, spacing: 15) {
+                VStack(alignment: .leading, spacing: 0) {
                     // Launch at login
-                    VStack(alignment: .leading, spacing: 5) {
-                        Toggle("Launch at login", isOn: Binding(
-                            get: { settings.launchAtLogin },
-                            set: { newValue in
-                                settings.launchAtLogin = newValue
-                                if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                                    appDelegate.updateLaunchAtLogin()
+                    HStack(alignment: .center, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Toggle("Launch at login", isOn: Binding(
+                                get: { settings.launchAtLogin },
+                                set: { newValue in
+                                    settings.launchAtLogin = newValue
+                                    if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
+                                        appDelegate.updateLaunchAtLogin()
+                                    }
                                 }
-                            }
-                        ))
-                        .toggleStyle(.checkbox)
+                            ))
+                            .toggleStyle(.checkbox)
 
-                        Text("Automatically start Unminimizer when you log in")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding(.leading, 18)
+                            Text("Automatically start Unminimizer when you log in")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
                     }
+                    .padding(.bottom, 12)
 
                     Divider()
 
                     // Unminimize shortcut
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack {
+                    HStack(alignment: .center, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("Unminimize shortcut")
-                            Spacer()
-                            KeyboardShortcutRecorder()
-                                .frame(width: 150)
-                        }
 
-                        Text("Press the shortcut to unminimize the most recently minimized window")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            Text("Press the shortcut to unminimize the most recently minimized window")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                        KeyboardShortcutRecorder()
+                            .frame(width: 150, height: 28)
                     }
+                    .padding(.vertical, 12)
 
                     Divider()
 
                     // Unminimize from
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack(alignment: .top) {
+                    HStack(alignment: .center, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("Unminimize windows from")
-                            Spacer()
-                            Picker("", selection: $settings.unminimizeStrategy) {
-                                ForEach(UnminimizeStrategy.allCases) { strategy in
-                                    Text(strategy.rawValue).tag(strategy)
-                                }
-                            }
-                            .labelsHidden()
-                            .frame(width: 150)
-                        }
 
-                        HStack {
                             Text(settings.unminimizeStrategy == .activeApp
                                  ? "Only unminimize windows from the active application"
                                  : "Unminimize windows from any application")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            Spacer()
-                            Color.clear.frame(width: 150)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
+                        Spacer()
+                        Picker("", selection: $settings.unminimizeStrategy) {
+                            ForEach(UnminimizeStrategy.allCases) { strategy in
+                                Text(strategy.rawValue).tag(strategy)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 150)
                     }
+                    .padding(.top, 12)
                 }
-                .padding(10)
+                .padding(8)
             }
-
-            Spacer()
         }
-        .padding(20)
-        .frame(width: 550, height: 400)
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 32)
+        .frame(width: 590)
         .contentShape(Rectangle())
         .onTapGesture {
             // Clear focus when clicking on background
