@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import Carbon
 import Combine
+import ServiceManagement
 
 enum UnminimizeStrategy: String, CaseIterable, Identifiable {
     case activeApp = "Active app only"
@@ -12,7 +13,8 @@ enum UnminimizeStrategy: String, CaseIterable, Identifiable {
 
 class AppSettings: ObservableObject {
     @AppStorage("unminimizeStrategy") var unminimizeStrategy: UnminimizeStrategy = .activeApp
-    @AppStorage("launchAtLogin") var launchAtLogin = true
+
+    @Published var launchAtLogin: Bool
 
     @Published var keyboardShortcutKeyCode: UInt32 {
         didSet {
@@ -35,5 +37,8 @@ class AppSettings: ObservableObject {
 
         let savedModifiers = UserDefaults.standard.integer(forKey: "keyboardShortcutModifiers")
         self.keyboardShortcutModifiers = savedModifiers != 0 ? UInt32(savedModifiers) : UInt32(cmdKey | shiftKey)
+
+        // Initialize launch at login from system state
+        self.launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 }

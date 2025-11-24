@@ -49,16 +49,12 @@ struct SettingsView: View {
                     // Launch at login
                     HStack(alignment: .center, spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Toggle("Launch at login", isOn: Binding(
-                                get: { settings.launchAtLogin },
-                                set: { newValue in
-                                    settings.launchAtLogin = newValue
-                                    if let appDelegate = NSApplication.shared.delegate as? AppDelegate {
-                                        appDelegate.updateLaunchAtLogin()
-                                    }
+                            Toggle("Launch at login", isOn: $settings.launchAtLogin)
+                                .toggleStyle(.checkbox)
+                                .onChange(of: settings.launchAtLogin) { oldValue, newValue in
+                                    print("🔧 Launch at login changed to: \(newValue)")
+                                    NotificationCenter.default.post(name: .launchAtLoginDidChange, object: nil)
                                 }
-                            ))
-                            .toggleStyle(.checkbox)
 
                             Text("Automatically start Unminimizer when you log in")
                                 .font(.caption)
@@ -130,6 +126,7 @@ struct SettingsView: View {
         .onAppear {
             // Check permission status when view appears
             accessibilityPermissionGranted = AXIsProcessTrusted()
+            syncLaunchAtLoginState()
 
             // Add escape key handler
             escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -154,6 +151,7 @@ struct SettingsView: View {
             // Window became frontmost - check permission and stop polling
             stopTimer()
             accessibilityPermissionGranted = AXIsProcessTrusted()
+            syncLaunchAtLoginState()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
             // Window lost focus - start polling (user might be in System Settings)
@@ -162,6 +160,7 @@ struct SettingsView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // Check permission status when app becomes active (switching from System Settings)
             accessibilityPermissionGranted = AXIsProcessTrusted()
+            syncLaunchAtLoginState()
         }
     }
 
@@ -179,6 +178,15 @@ struct SettingsView: View {
     private func stopTimer() {
         timerCancellable?.cancel()
         timerCancellable = nil
+    }
+
+    private func syncLaunchAtLoginState() {
+        let status = SMAppService.mainApp.status
+        let isEnabled = status == .enabled
+        if settings.launchAtLogin != isEnabled {
+            print("🔄 Syncing launch at login: \(settings.launchAtLogin) -> \(isEnabled)")
+            settings.launchAtLogin = isEnabled
+        }
     }
 }
 

@@ -46,9 +46,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: .shortcutRecordingStopped,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLaunchAtLoginChange),
+            name: .launchAtLoginDidChange,
+            object: nil
+        )
 
-        // Setup launch at login
-        updateLaunchAtLogin()
 
         // Setup Cmd+Q handler
         setupCmdQHandler()
@@ -65,6 +69,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleShortcutRecordingStopped() {
         registerHotKey()
+    }
+
+    @objc private func handleLaunchAtLoginChange() {
+        print("📢 Received launch at login change notification")
+        updateLaunchAtLogin()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -282,19 +291,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func updateLaunchAtLogin() {
         let settings = AppSettings.shared
+        let status = SMAppService.mainApp.status
+
+        print("🚀 Launch at login - Current status: \(status.rawValue), Desired: \(settings.launchAtLogin)")
 
         do {
             if settings.launchAtLogin {
-                if SMAppService.mainApp.status == .notRegistered {
+                // Try to register if not already enabled
+                if status != .enabled {
+                    print("📝 Registering app for launch at login (current status: \(status.rawValue))...")
                     try SMAppService.mainApp.register()
+                    let newStatus = SMAppService.mainApp.status
+                    print("✅ Registration attempted - New status: \(newStatus.rawValue)")
+
+                    if newStatus == .requiresApproval {
+                        print("⚠️ User approval required in System Settings > General > Login Items")
+                    }
+                } else {
+                    print("ℹ️ Already enabled")
                 }
             } else {
-                if SMAppService.mainApp.status == .enabled {
+                // Try to unregister if currently enabled
+                if status == .enabled {
+                    print("📝 Unregistering app from launch at login...")
                     try SMAppService.mainApp.unregister()
+                    print("✅ Successfully unregistered from launch at login")
+                } else {
+                    print("ℹ️ Already unregistered (status: \(status.rawValue))")
                 }
             }
         } catch {
-            print("Failed to update launch at login: \(error)")
+            print("❌ Failed to update launch at login: \(error)")
         }
     }
 
