@@ -89,8 +89,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem?.button {
-            // Use SF Symbol for the icon
-            button.image = NSImage(systemSymbolName: "arrow.up.square", accessibilityDescription: "Unminimizer")
+            // Use SF Symbol for the menu bar icon
+            let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+            button.image = NSImage(systemSymbolName: "arrow.up.square", accessibilityDescription: "Unminimizer")?.withSymbolConfiguration(config)
         }
 
         let menu = NSMenu()
