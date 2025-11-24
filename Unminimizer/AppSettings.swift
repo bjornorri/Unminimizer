@@ -13,6 +13,7 @@ enum UnminimizeStrategy: String, CaseIterable, Identifiable {
 
 class AppSettings: ObservableObject {
     @AppStorage("unminimizeStrategy") var unminimizeStrategy: UnminimizeStrategy = .activeApp
+    @AppStorage("lastRunVersion") private var storedVersion: String?
 
     @Published var launchAtLogin: Bool
 
@@ -28,6 +29,11 @@ class AppSettings: ObservableObject {
         }
     }
 
+    /// The current app version from the bundle
+    var currentVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+    }
+
     static let shared = AppSettings()
 
     private init() {
@@ -40,5 +46,8 @@ class AppSettings: ObservableObject {
 
         // Initialize launch at login from system state
         self.launchAtLogin = SMAppService.mainApp.status == .enabled
+
+        // Store current version
+        storedVersion = currentVersion
     }
 }
