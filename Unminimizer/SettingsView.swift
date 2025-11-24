@@ -52,7 +52,7 @@ struct SettingsView: View {
                             Toggle("Launch at login", isOn: $settings.launchAtLogin)
                                 .toggleStyle(.checkbox)
                                 .onChange(of: settings.launchAtLogin) { oldValue, newValue in
-                                    print("🔧 Launch at login changed to: \(newValue)")
+                                    Logger.debug("🔧 Launch at login changed to: \(newValue)")
                                     NotificationCenter.default.post(name: .launchAtLoginDidChange, object: nil)
                                 }
 
@@ -184,7 +184,7 @@ struct SettingsView: View {
         let status = SMAppService.mainApp.status
         let isEnabled = status == .enabled
         if settings.launchAtLogin != isEnabled {
-            print("🔄 Syncing launch at login: \(settings.launchAtLogin) -> \(isEnabled)")
+            Logger.debug("🔄 Syncing launch at login: \(settings.launchAtLogin) -> \(isEnabled)")
             settings.launchAtLogin = isEnabled
         }
     }

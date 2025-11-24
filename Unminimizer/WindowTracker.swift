@@ -21,7 +21,7 @@ class WindowTracker: ObservableObject {
         guard !isTracking else { return }
         isTracking = true
 
-        print("🔍 WindowTracker: Starting tracking...")
+        Logger.debug("🔍 WindowTracker: Starting tracking...")
 
         // Observe running applications
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -73,7 +73,7 @@ class WindowTracker: ObservableObject {
         guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else {
             return
         }
-        print("🚀 App launched: \(app.localizedName ?? "unknown")")
+        Logger.debug("🚀 App launched: \(app.localizedName ?? "unknown")")
         observeApplication(app)
     }
 
@@ -90,7 +90,7 @@ class WindowTracker: ObservableObject {
             return
         }
 
-        print("💀 App terminated: \(app.localizedName ?? "unknown")")
+        Logger.debug("💀 App terminated: \(app.localizedName ?? "unknown")")
 
         if let bundleID = app.bundleIdentifier {
             minimizedWindows.removeAll { $0.appBundleIdentifier == bundleID }
@@ -121,7 +121,7 @@ class WindowTracker: ObservableObject {
 
             guard result == .success, let observer = observer else {
                 if app.localizedName != nil {
-                    print("⚠️ Failed to create observer for \(app.localizedName ?? "unknown"): \(result.rawValue)")
+                    Logger.debug("⚠️ Failed to create observer for \(app.localizedName ?? "unknown"): \(result.rawValue)")
                 }
                 return
             }
@@ -153,11 +153,11 @@ class WindowTracker: ObservableObject {
 
         if windowsResult != .success {
             if app.localizedName != nil {
-                print("⚠️ Failed to get windows for \(app.localizedName ?? "unknown") - error: \(windowsResult.rawValue)")
+                Logger.debug("⚠️ Failed to get windows for \(app.localizedName ?? "unknown") - error: \(windowsResult.rawValue)")
 
                 // Check if accessibility is actually enabled
                 if !AXIsProcessTrusted() {
-                    print("❌ ACCESSIBILITY NOT TRUSTED! Please enable in System Settings and restart the app.")
+                    Logger.debug("❌ ACCESSIBILITY NOT TRUSTED! Please enable in System Settings and restart the app.")
                 }
             }
             return
@@ -168,7 +168,7 @@ class WindowTracker: ObservableObject {
         }
 
         if windows.count > 0 {
-            print("👀 Observing \(windows.count) windows for \(app.localizedName ?? "unknown")")
+            Logger.debug("👀 Observing \(windows.count) windows for \(app.localizedName ?? "unknown")")
         }
 
         // Observe each window
@@ -212,7 +212,7 @@ class WindowTracker: ObservableObject {
                     handleWindowMinimized(window, pid: app.processIdentifier)
                 }
             } else {
-                print("⚠️ Failed to observe window in \(app.localizedName ?? "unknown"): mini=\(miniResult.rawValue) demini=\(deminiResult.rawValue)")
+                Logger.debug("⚠️ Failed to observe window in \(app.localizedName ?? "unknown"): mini=\(miniResult.rawValue) demini=\(deminiResult.rawValue)")
             }
         }
 
@@ -253,7 +253,7 @@ class WindowTracker: ObservableObject {
         )
 
         minimizedWindows.append(minimizedWindow)
-        print("➖ Window minimized: \(windowTitle ?? "untitled") from \(app.localizedName ?? bundleID). Total: \(minimizedWindows.count)")
+        Logger.debug("➖ Window minimized: \(windowTitle ?? "untitled") from \(app.localizedName ?? bundleID). Total: \(minimizedWindows.count)")
     }
 
     fileprivate func handleWindowUnminimized(_ windowElement: AXUIElement, pid: pid_t) {
@@ -264,7 +264,7 @@ class WindowTracker: ObservableObject {
         }
         let removed = countBefore - minimizedWindows.count
         if removed > 0 {
-            print("➕ Window unminimized. Removed \(removed) window(s). Total: \(minimizedWindows.count)")
+            Logger.debug("➕ Window unminimized. Removed \(removed) window(s). Total: \(minimizedWindows.count)")
         }
     }
 
@@ -273,40 +273,40 @@ class WindowTracker: ObservableObject {
             return
         }
         // When a new window is created, observe it
-        print("🆕 New window created for \(app.localizedName ?? "unknown")")
+        Logger.debug("🆕 New window created for \(app.localizedName ?? "unknown")")
         observeApplication(app)
     }
 
     func getMostRecentMinimizedWindow(fromActiveAppOnly: Bool = false) -> MinimizedWindow? {
-        print("🔍 Getting most recent window. Active app only: \(fromActiveAppOnly). Total minimized: \(minimizedWindows.count)")
+        Logger.debug("🔍 Getting most recent window. Active app only: \(fromActiveAppOnly). Total minimized: \(minimizedWindows.count)")
 
         if fromActiveAppOnly {
             guard let frontmostApp = NSWorkspace.shared.frontmostApplication,
                   let bundleID = frontmostApp.bundleIdentifier else {
-                print("⚠️ No frontmost app found")
+                Logger.debug("⚠️ No frontmost app found")
                 return nil
             }
 
-            print("🎯 Frontmost app: \(frontmostApp.localizedName ?? bundleID)")
+            Logger.debug("🎯 Frontmost app: \(frontmostApp.localizedName ?? bundleID)")
 
             // Find most recent window from frontmost app
             let filtered = minimizedWindows.filter { $0.appBundleIdentifier == bundleID }
-            print("📋 Found \(filtered.count) minimized windows for active app")
+            Logger.debug("📋 Found \(filtered.count) minimized windows for active app")
             return filtered.max(by: { $0.timestamp < $1.timestamp })
         } else {
             // Return most recent window globally
             let result = minimizedWindows.max(by: { $0.timestamp < $1.timestamp })
             if let window = result {
-                print("✅ Found most recent window: \(window.windowTitle ?? "untitled") from \(window.appName)")
+                Logger.debug("✅ Found most recent window: \(window.windowTitle ?? "untitled") from \(window.appName)")
             } else {
-                print("❌ No minimized windows found")
+                Logger.debug("❌ No minimized windows found")
             }
             return result
         }
     }
 
     func unminimizeWindow(_ window: MinimizedWindow) -> Bool {
-        print("🔓 Attempting to unminimize: \(window.windowTitle ?? "untitled") from \(window.appName)")
+        Logger.debug("🔓 Attempting to unminimize: \(window.windowTitle ?? "untitled") from \(window.appName)")
 
         // Set the minimized attribute to false
         let falseValue = false as CFBoolean
@@ -316,7 +316,7 @@ class WindowTracker: ObservableObject {
             falseValue
         )
 
-        print("📝 AXUIElementSetAttributeValue result: \(result.rawValue)")
+        Logger.debug("📝 AXUIElementSetAttributeValue result: \(result.rawValue)")
 
         if result == .success {
             // Activate the application
@@ -324,7 +324,7 @@ class WindowTracker: ObservableObject {
                 withBundleIdentifier: window.appBundleIdentifier
             ).first {
                 app.activate()
-                print("✅ Successfully unminimized and activated app")
+                Logger.debug("✅ Successfully unminimized and activated app")
             }
 
             // Remove from our list
@@ -332,7 +332,7 @@ class WindowTracker: ObservableObject {
             return true
         }
 
-        print("❌ Failed to unminimize window")
+        Logger.debug("❌ Failed to unminimize window")
         return false
     }
 }

@@ -72,7 +72,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func handleLaunchAtLoginChange() {
-        print("📢 Received launch at login change notification")
+        Logger.debug("📢 Received launch at login change notification")
         updateLaunchAtLogin()
     }
 
@@ -186,7 +186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func checkAccessibilityPermissions() {
         // Check without prompt
         let trusted = AXIsProcessTrusted()
-        print("🔐 Accessibility check: \(trusted)")
+        Logger.debug("🔐 Accessibility check: \(trusted)")
 
         if !trusted {
             // Open settings window to guide user to grant permission
@@ -194,7 +194,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self.showSettings()
             }
         } else {
-            print("✅ Accessibility permissions granted")
+            Logger.debug("✅ Accessibility permissions granted")
         }
     }
 
@@ -205,7 +205,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let keyCode = settings.keyboardShortcutKeyCode
         let modifiers = settings.keyboardShortcutModifiers
 
-        print("⌨️ Registering hotkey: keyCode=\(keyCode), modifiers=\(modifiers)")
+        Logger.debug("⌨️ Registering hotkey: keyCode=\(keyCode), modifiers=\(modifiers)")
 
         var hotKeyID = EventHotKeyID()
         hotKeyID.signature = OSType("UNMN".fourCharCodeValue)
@@ -222,7 +222,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let userData = userData else { return OSStatus(eventNotHandledErr) }
                 let appDelegate = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
 
-                print("🎹 Hotkey pressed!")
+                Logger.debug("🎹 Hotkey pressed!")
 
                 Task { @MainActor in
                     appDelegate.performUnminimize()
@@ -236,7 +236,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             &eventHandler
         )
 
-        print("📝 InstallEventHandler result: \(handlerResult)")
+        Logger.debug("📝 InstallEventHandler result: \(handlerResult)")
 
         // Register hot key
         let hotKeyResult = RegisterEventHotKey(
@@ -248,7 +248,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             &hotKeyRef
         )
 
-        print("📝 RegisterEventHotKey result: \(hotKeyResult)")
+        Logger.debug("📝 RegisterEventHotKey result: \(hotKeyResult)")
     }
 
     private func unregisterHotKey() {
@@ -268,23 +268,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func performUnminimize() {
-        print("🚀 performUnminimize called")
+        Logger.debug("🚀 performUnminimize called")
 
         let settings = AppSettings.shared
         let activeAppOnly = settings.unminimizeStrategy == .activeApp
 
-        print("⚙️ Settings: strategy=\(settings.unminimizeStrategy), activeAppOnly=\(activeAppOnly)")
+        Logger.debug("⚙️ Settings: strategy=\(settings.unminimizeStrategy), activeAppOnly=\(activeAppOnly)")
 
         guard let window = windowTracker.getMostRecentMinimizedWindow(fromActiveAppOnly: activeAppOnly) else {
             // No minimized windows available
-            print("⚠️ No window found, beeping")
+            Logger.debug("⚠️ No window found, beeping")
             NSSound.beep()
             return
         }
 
         let success = windowTracker.unminimizeWindow(window)
         if !success {
-            print("❌ Unminimize failed, beeping")
+            Logger.debug("❌ Unminimize failed, beeping")
             NSSound.beep()
         }
     }
@@ -293,35 +293,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let settings = AppSettings.shared
         let status = SMAppService.mainApp.status
 
-        print("🚀 Launch at login - Current status: \(status.rawValue), Desired: \(settings.launchAtLogin)")
+        Logger.debug("🚀 Launch at login - Current status: \(status.rawValue), Desired: \(settings.launchAtLogin)")
 
         do {
             if settings.launchAtLogin {
                 // Try to register if not already enabled
                 if status != .enabled {
-                    print("📝 Registering app for launch at login (current status: \(status.rawValue))...")
+                    Logger.debug("📝 Registering app for launch at login (current status: \(status.rawValue))...")
                     try SMAppService.mainApp.register()
                     let newStatus = SMAppService.mainApp.status
-                    print("✅ Registration attempted - New status: \(newStatus.rawValue)")
+                    Logger.debug("✅ Registration attempted - New status: \(newStatus.rawValue)")
 
                     if newStatus == .requiresApproval {
-                        print("⚠️ User approval required in System Settings > General > Login Items")
+                        Logger.debug("⚠️ User approval required in System Settings > General > Login Items")
                     }
                 } else {
-                    print("ℹ️ Already enabled")
+                    Logger.debug("ℹ️ Already enabled")
                 }
             } else {
                 // Try to unregister if currently enabled
                 if status == .enabled {
-                    print("📝 Unregistering app from launch at login...")
+                    Logger.debug("📝 Unregistering app from launch at login...")
                     try SMAppService.mainApp.unregister()
-                    print("✅ Successfully unregistered from launch at login")
+                    Logger.debug("✅ Successfully unregistered from launch at login")
                 } else {
-                    print("ℹ️ Already unregistered (status: \(status.rawValue))")
+                    Logger.debug("ℹ️ Already unregistered (status: \(status.rawValue))")
                 }
             }
         } catch {
-            print("❌ Failed to update launch at login: \(error)")
+            Logger.debug("❌ Failed to update launch at login: \(error)")
         }
     }
 
@@ -406,7 +406,7 @@ extension AppDelegate: NSMenuItemValidation {
             let settings = AppSettings.shared
             let activeAppOnly = settings.unminimizeStrategy == .activeApp
             let hasWindow = windowTracker.getMostRecentMinimizedWindow(fromActiveAppOnly: activeAppOnly) != nil
-            print("🔄 Validating menu item - hasWindow: \(hasWindow)")
+            Logger.debug("🔄 Validating menu item - hasWindow: \(hasWindow)")
             return hasWindow
         }
         return true
