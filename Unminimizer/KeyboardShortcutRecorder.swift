@@ -1,13 +1,6 @@
 import SwiftUI
 import Carbon
 
-extension Notification.Name {
-    static let shortcutDidChange = Notification.Name("shortcutDidChange")
-    static let shortcutRecordingStarted = Notification.Name("shortcutRecordingStarted")
-    static let shortcutRecordingStopped = Notification.Name("shortcutRecordingStopped")
-    static let launchAtLoginDidChange = Notification.Name("launchAtLoginDidChange")
-}
-
 struct KeyboardShortcutRecorder: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let view = ShortcutRecorderView()
