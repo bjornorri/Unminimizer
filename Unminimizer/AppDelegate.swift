@@ -52,13 +52,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Setup Cmd+Q handler
         setupCmdQHandler()
-
-        #if DEBUG
-        // Open settings on launch for development
-        DispatchQueue.main.async { [weak self] in
-            self?.showSettings()
-        }
-        #endif
     }
 
     @objc private func handleShortcutChange() {
@@ -182,26 +175,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func checkAccessibilityPermissions() {
-        // First check without prompt
-        var trusted = AXIsProcessTrusted()
-        print("🔐 Initial accessibility check: \(trusted)")
+        // Check without prompt
+        let trusted = AXIsProcessTrusted()
+        print("🔐 Accessibility check: \(trusted)")
 
         if !trusted {
-            // Request with prompt option
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-            trusted = AXIsProcessTrustedWithOptions(options)
-            print("🔐 After prompt request: \(trusted)")
-
-            if !trusted {
-                // Show additional alert
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    let alert = NSAlert()
-                    alert.messageText = "Accessibility Permission Required"
-                    alert.informativeText = "Unminimizer needs accessibility access to monitor and restore minimized windows.\n\nPlease:\n1. Grant permission in the System Settings prompt\n2. Restart Unminimizer after granting permission"
-                    alert.alertStyle = .warning
-                    alert.addButton(withTitle: "OK")
-                    alert.runModal()
-                }
+            // Open settings window to guide user to grant permission
+            DispatchQueue.main.async {
+                self.showSettings()
             }
         } else {
             print("✅ Accessibility permissions granted")

@@ -1,6 +1,7 @@
 import SwiftUI
 import ServiceManagement
 import Combine
+import Carbon
 
 struct SettingsView: View {
     @EnvironmentObject var settings: AppSettings
@@ -31,8 +32,9 @@ struct SettingsView: View {
                     Spacer()
 
                     Button("Grant Permission") {
-                        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-                        NSWorkspace.shared.open(url)
+                        // Request accessibility permission with system dialog
+                        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                        _ = AXIsProcessTrustedWithOptions(options)
                     }
                     .opacity(accessibilityPermissionGranted ? 0 : 1)
                     .disabled(accessibilityPermissionGranted)
