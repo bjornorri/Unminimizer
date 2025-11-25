@@ -14,7 +14,7 @@
 ### Homebrew
 
 ```bash
-brew install --cask unminimizer
+brew install --cask bjornorri/apps/unminimizer
 ```
 
 ### Direct Download
